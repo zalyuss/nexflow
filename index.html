@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proiecte — Nexflow</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'DM Sans', sans-serif; background: #0e0b1e; color: #fff; }
+  h1, h2, h3, h4 { font-family: 'Syne', sans-serif; }
+
+  /* Navbar */
+  #navbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    transition: background 0.3s, box-shadow 0.3s;
+    padding: 20px 0;
+  }
+  #navbar.scrolled {
+    background: rgba(14,11,30,0.90);
+    backdrop-filter: blur(16px);
+    box-shadow: 0 1px 32px rgba(0,0,0,0.30);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    padding: 12px 0;
+  }
+
+  /* Mobile menu */
+  #mobile-menu {
+    display: none; flex-direction: column; gap: 0;
+    background: rgba(14,11,30,0.96);
+    backdrop-filter: blur(16px);
+    border-top: 1px solid rgba(255,255,255,0.08);
+    padding: 16px 0;
+  }
+  #mobile-menu.open { display: flex; }
+  #mobile-menu a {
+    padding: 12px 24px; color: rgba(255,255,255,0.75);
+    font-weight: 500; text-decoration: none; transition: color 0.2s;
+  }
+  #mobile-menu a:hover { color: #aaa4f8; }
+
+  /* Reveal animation */
+  .reveal {
+    opacity: 0; transform: translateY(28px);
+    transition: opacity 0.7s cubic-bezier(.22,1,.36,1), transform 0.7s cubic-bezier(.22,1,.36,1);
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+  .reveal-delay-1 { transition-delay: 0.10s; }
+  .reveal-delay-2 { transition-delay: 0.20s; }
+  .reveal-delay-3 { transition-delay: 0.30s; }
+  .reveal-delay-4 { transition-delay: 0.40s; }
+  .reveal-delay-5 { transition-delay: 0.50s; }
+
+  /* Buttons */
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #534AB7; color: #fff;
+    padding: 14px 28px; border-radius: 12px;
+    font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 15px;
+    border: none; cursor: pointer; text-decoration: none;
+    box-shadow: 0 4px 24px rgba(83,74,183,0.30);
+    transition: background 0.2s, transform 0.2s cubic-bezier(.22,1,.36,1), box-shadow 0.2s;
+  }
+  .btn-primary:hover {
+    background: #4740a3; transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(83,74,183,0.38);
+  }
+  .btn-primary:active { transform: translateY(0); }
+
+  /* Force cards always visible — reveal observer was leaving ghosts */
+  #projects-grid .project-card {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* Project cards */
+  .project-card {
+    background: #231e4a;
+    border: 1.5px solid rgba(255,255,255,0.22);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.50);
+    transition: transform 0.35s cubic-bezier(.22,1,.36,1), box-shadow 0.35s cubic-bezier(.22,1,.36,1), border-color 0.3s;
+    cursor: pointer;
+  }
+  .project-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 28px 64px rgba(0,0,0,0.55), 0 4px 20px rgba(83,74,183,0.25);
+    border-color: rgba(170,164,248,0.50);
+  }
+
+  /* Filter tabs */
+  .filter-btn {
+    padding: 8px 20px; border-radius: 999px;
+    font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 14px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: transparent; color: rgba(255,255,255,0.65);
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+  }
+  .filter-btn:hover, .filter-btn.active {
+    background: rgba(83,74,183,0.35);
+    color: #fff; border-color: rgba(170,164,248,0.40);
+  }
+
+  /* Footer */
+  footer { background: #080615; border-top: 1px solid rgba(255,255,255,0.07); }
+
+  section { scroll-margin-top: 80px; }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
+    50% { box-shadow: 0 0 0 6px rgba(34,197,94,0); }
+  }
+
+  @media (max-width: 768px) {
+    #desktop-nav { display: none !important; }
+    #hamburger { display: block !important; }
+    #projects-grid { grid-template-columns: 1fr !important; }
+    #stats-bar { grid-template-columns: 1fr 1fr !important; gap: 20px !important; }
+    #footer-grid { grid-template-columns: 1fr !important; }
+  }
+  @media (max-width: 1024px) {
+    #projects-grid { grid-template-columns: 1fr 1fr !important; }
+    #footer-grid { grid-template-columns: 1fr 1fr !important; gap: 32px !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════ NAVBAR -->
+<nav id="navbar" style="position:fixed;top:0;left:0;right:0;z-index:100;">
+  <div style="max-width:1200px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;">
+    <a href="nexai.html" style="text-decoration:none;display:flex;align-items:center;gap:10px;">
+      <div style="width:36px;height:36px;background:linear-gradient(135deg,#534AB7,#8a7ff3);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#fff" stroke="#fff" stroke-width="0.5" stroke-linejoin="round"/></svg>
+      </div>
+      <span style="font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:#fff;letter-spacing:-0.02em;">Nex<span style="color:#aaa4f8;">flow</span></span>
+    </a>
+
+    <div style="display:flex;align-items:center;gap:32px;" id="desktop-nav">
+      <a href="nexai.html#servicii" style="font-weight:500;color:rgba(255,255,255,0.75);text-decoration:none;font-size:15px;transition:color 0.2s;" onmouseover="this.style.color='#aaa4f8'" onmouseout="this.style.color='rgba(255,255,255,0.75)'">Servicii</a>
+      <a href="nexai.html#cum-functioneaza" style="font-weight:500;color:rgba(255,255,255,0.75);text-decoration:none;font-size:15px;transition:color 0.2s;" onmouseover="this.style.color='#aaa4f8'" onmouseout="this.style.color='rgba(255,255,255,0.75)'">Cum funcționează</a>
+      <a href="nexai.html#preturi" style="font-weight:500;color:rgba(255,255,255,0.75);text-decoration:none;font-size:15px;transition:color 0.2s;" onmouseover="this.style.color='#aaa4f8'" onmouseout="this.style.color='rgba(255,255,255,0.75)'">Prețuri</a>
+      <a href="proiecte.html" style="font-weight:500;color:#aaa4f8;text-decoration:none;font-size:15px;">Proiecte</a>
+      <a href="nexai.html#contact" style="font-weight:500;color:rgba(255,255,255,0.75);text-decoration:none;font-size:15px;transition:color 0.2s;" onmouseover="this.style.color='#aaa4f8'" onmouseout="this.style.color='rgba(255,255,255,0.75)'">Contact</a>
+      <a href="nexai.html#contact" class="btn-primary" style="padding:10px 22px;font-size:14px;">Solicită ofertă</a>
+    </div>
+
+    <button id="hamburger" onclick="toggleMenu()" style="display:none;background:none;border:none;cursor:pointer;padding:8px;" aria-label="Meniu">
+      <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+  </div>
+  <div id="mobile-menu">
+    <a href="nexai.html#servicii" onclick="toggleMenu()">Servicii</a>
+    <a href="nexai.html#cum-functioneaza" onclick="toggleMenu()">Cum funcționează</a>
+    <a href="nexai.html#preturi" onclick="toggleMenu()">Prețuri</a>
+    <a href="proiecte.html" onclick="toggleMenu()">Proiecte</a>
+    <a href="nexai.html#contact" onclick="toggleMenu()">Contact</a>
+    <div style="padding:12px 24px;"><a href="nexai.html#contact" class="btn-primary" style="width:100%;justify-content:center;" onclick="toggleMenu()">Solicită ofertă</a></div>
+  </div>
+</nav>
+
+
+<!-- ═══════════════════════════════════════════ PROIECTE -->
+<section style="padding:120px 24px 120px;background:#0e0b1e;position:relative;z-index:1;">
+  <div style="max-width:1160px;margin:0 auto;">
+
+    <!-- Page title -->
+    <div style="margin-bottom:48px;">
+      <div style="display:inline-block;background:rgba(83,74,183,0.25);color:#aaa4f8;font-family:'DM Sans',sans-serif;font-weight:600;font-size:13px;letter-spacing:0.08em;text-transform:uppercase;padding:5px 14px;border-radius:999px;margin-bottom:16px;border:1px solid rgba(170,164,248,0.25);">Portofoliu</div>
+      <h1 style="font-family:'Syne',sans-serif;font-size:clamp(2rem,4vw,3rem);font-weight:800;letter-spacing:-0.03em;color:#fff;margin-bottom:10px;">Proiectele noastre</h1>
+      <p style="font-size:16px;color:rgba(255,255,255,0.55);font-family:'DM Sans',sans-serif;">Click pe orice proiect pentru a vedea detalii complete.</p>
+    </div>
+
+    <!-- Filter tabs -->
+    <div class="reveal" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:48px;">
+      <button class="filter-btn active" data-filter="all" onclick="filterProjects(this,'all')">Toate</button>
+      <button class="filter-btn" data-filter="chatbot" onclick="filterProjects(this,'chatbot')">Chatbot Site</button>
+      <button class="filter-btn" data-filter="whatsapp" onclick="filterProjects(this,'whatsapp')">WhatsApp Bot</button>
+      <button class="filter-btn" data-filter="vocal" onclick="filterProjects(this,'vocal')">Agent Vocal</button>
+    </div>
+
+    <!-- Projects grid -->
+    <div id="projects-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:28px;">
+
+      <!-- Card 1: Marin Auto -->
+      <div onclick="window.location.href='marin-auto.html'" style="cursor:pointer;" class="project-card" data-category="chatbot">
+        <!-- Color header -->
+        <div style="height:6px;background:linear-gradient(90deg,#534AB7,#8a7ff3);"></div>
+        <div style="padding:32px;">
+          <!-- Badge + Client -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+            <div style="background:rgba(83,74,183,0.25);color:#aaa4f8;font-size:12px;font-weight:600;padding:4px 12px;border-radius:999px;border:1px solid rgba(170,164,248,0.2);font-family:'DM Sans',sans-serif;letter-spacing:0.06em;text-transform:uppercase;">Chatbot Site</div>
+            <div style="width:40px;height:40px;background:linear-gradient(135deg,#534AB7,#8a7ff3);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:#fff;flex-shrink:0;">MA</div>
+          </div>
+          <!-- Big metric -->
+          <div style="font-family:'Syne',sans-serif;font-size:3rem;font-weight:800;color:#aaa4f8;letter-spacing:-0.04em;line-height:1;margin-bottom:8px;">+240%</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:20px;font-family:'DM Sans',sans-serif;">cereri de ofertă în prima lună</div>
+          <!-- Title + desc -->
+          <h3 style="font-size:18px;font-weight:700;color:#fff;margin-bottom:10px;letter-spacing:-0.01em;">Marin Auto Craiova</h3>
+          <p style="font-size:14px;color:rgba(255,255,255,0.60);line-height:1.65;margin-bottom:24px;">Dealer auto cu trafic mare pe site dar conversii slabe. Chatbot-ul preia vizitatorii 24/7, captează datele și programează testele drive automat.</p>
+          <!-- Tags -->
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;">
+            <span style="background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.55);font-size:12px;padding:3px 10px;border-radius:6px;font-family:'DM Sans',sans-serif;">Lead capture</span>
+            <span style="background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.55);font-size:12px;padding:3px 10px;border-radius:6px;font-family:'DM Sans',sans-serif;">Programări auto</span>
+            <span style="background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.55);font-size:12px;padding:3px 10px;border-radius:6px;font-family:'DM Sans',sans-serif;">CRM sync</span>
+          </div>
+          <!-- Bottom row -->
+          <div style="display:flex;align-items:center;justify-content:space-between;padding-top:20px;border-top:1px solid rgba(255,255,255,0.08);">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="width:7px;height:7px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;"></div>
+              <span style="font-size:13px;color:rgba(255,255,255,0.45);">Activ din Ian 2024</span>
+            </div>
+            <a href="nexai.html#contact" style="font-size:13px;font-weight:600;color:#aaa4f8;text-decoration:none;display:flex;align-items:center;gap:4px;transition:color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#aaa4f8'">
+              Similar?
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2: Clinica Popa -->
+      <div onclick="window.location.href='clinica-popa.html'" style="cursor:pointer;" class="project-card" data-category="vocal">
+        <div style="height:6px;background:linear-gradient(90deg,#7c3aed,#c084fc);"></div>
+        <div style="padding:32px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+            <div style="background:rgba(124,58,237,0.25);color:#c084fc;font-size:12px;font-weight:600;padding:4px 12px;border-radius:999px;border:1px solid rgba(192,132,252,0.2);font-family:'DM Sans',sans-serif;letter-spacing:0.06em;text-transform:uppercase;">Agent Vocal</div>
+            <div style="width:40px;height:40px;background:linear-gradient(135deg,#7c3aed,#c084fc);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:#fff;flex-shrink:0;">CP</div>
+          </div>
+          <div style="font-family:'Syne',sans-serif;font-size:3rem;font-weight:800;color:#c084fc;letter-spacing:-0.04em;line-height:1;margin-bottom:8px;">80%</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:20px;">apeluri gestionate automat</div>
+          <h3 style="font-size:18px;font-weight:700;color:#fff;margin-bottom:10px;letter-spacing:-0.01em;">Clinica Popa</h3>
+          <p style="font-size:14px;color:rgba(255,255,255,0.60);line-height:1.65;margin-bottom:24px;">Clinică medicală cu 200+ apeluri zilnice pentru programări. Agentul vocal preia, programează și confirmă — echipa se ocupă doar de pacienți.</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;">
+            <span style="background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.55);font-size:12px;padding:3px 10px;border-radius:6px;">Programări auto</span>
+            <span style="background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.55);font-size:12px;padding:3px 10px;border-radius:6px;">Confirmare SMS</span>
+            <span style="background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.55);font-size:12px;padding:3px 10px;border-radius:6px;">Rapoarte zilnice</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding-top:20px;border-top:1px solid rgba(255,255,255,0.08);">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="width:7px;height:7px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;"></div>
+              <span style="font-size:13px;color:rgba(255,255,255,0.45);">Activ din Mar 2024</span>
+            </div>
+            <a href="nexai.html#contact" style="font-size:13px;font-weight:600;color:#c084fc;text-decoration:none;display:flex;align-items:center;gap:4px;transition:color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#c084fc'">
+              Similar?
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3: Tudor Imobiliare -->
+      <div onclick="window.location.href='tudor-imobiliare.html'" style="cursor:pointer;" class="project-card" data-category="whatsapp">
+        <div style="height:6px;background:linear-gradient(90deg,#16a34a,#4ade80);"></div>
+        <div style="padding:32px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+            <div style="background:rgba(22,163,74,0.20);color:#4ade80;font-size:12px;font-weight:600;padding:4px 12px;border-radius:999px;border:1px solid rgba(74,222,128,0.2);font-family:'DM Sans',sans-serif;letter-spacing:0.06em;text-transform:uppercase;">WhatsApp Bot</div>
+            <div style="width:40px;height:40px;background:linear-gradient(135deg,#16a34a,#4ade80);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:#fff;flex-shrink:0;">TI</div>
+          </div>
+          <div style="font-family:'Syne',sans-serif;font-size:3rem;font-weight:800;color:#4ade80;letter-spacing:-0.04em;line-height:1;margin-bottom:8px;">1.200</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:20px;">clienți contactați automat / lună</div>
+          <h3 style="font-size:18px;font-weight:700;color:#fff;margin-bottom:10px;letter-spacing:-0.01em;">Tudor Imobiliare</h3>
+          <p style="font-size:14px;color:rgba(255,255,255,0.60);line-height:1.65;margin-bottom:24px;">Agenție imobiliară cu portofoliu extins. Bot-ul WhatsApp califică lead-urile, trimite oferte personalizate și programează vizionări — fără agent uman implicat.</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;">
+            <span style="background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.55);font-size:12px;padding:3px 10px;border-radius:6px;">Calificare lead-uri</span>
+            <span style="background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.55);font-size:12px;padding:3px 10px;border-radius:6px;">Oferte automate</span>
+            <span style="background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.55);font-size:12px;padding:3px 10px;border-radius:6px;">Programări vizionări</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding-top:20px;border-top:1px solid rgba(255,255,255,0.08);">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="width:7px;height:7px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;"></div>
+              <span style="font-size:13px;color:rgba(255,255,255,0.45);">Activ din Feb 2024</span>
+            </div>
+            <a href="nexai.html#contact" style="font-size:13px;font-weight:600;color:#4ade80;text-decoration:none;display:flex;align-items:center;gap:4px;transition:color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#4ade80'">
+              Similar?
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 4: Kafé Velvet -->
+      <div onclick="window.location.href='kafe-velvet.html'" style="cursor:pointer;" class="project-card" data-category="chatbot whatsapp">
+        <div style="height:6px;background:linear-gradient(90deg,#f59e0b,#fcd34d);"></div>
+        <div style="padding:32px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+            <div style="background:rgba(245,158,11,0.20);color:#fcd34d;font-size:12px;font-weight:600;padding:4px 12px;border-radius:999px;border:1px solid rgba(252,211,77,0.2);font-family:'DM Sans',sans-serif;letter-spacing:0.06em;text-transform:uppercase;">Chatbot + WhatsApp</div>
+            <div style="width:40px;height:40px;background:linear-gradient(135deg,#f59e0b,#fcd34d);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:#78350f;flex-shrink:0;">KV</div>
+          </div>
+          <div style="font-family:'Syne',sans-serif;font-size:3rem;font-weight:800;color:#fcd34d;letter-spacing:-0.04em;line-height:1;margin-bottom:8px;">-65%</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:20px;">timp de răspuns față de înainte</div>
+          <h3 style="font-size:18px;font-weight:700;color:#fff;margin-bottom:10px;letter-spacing:-0.01em;">Kafé Velvet</h3>
+          <p style="font-size:14px;color:rgba(255,255,255,0.60);line-height:1.65;margin-bottom:24px;">Lanț de cafenele cu rezervări și comenzi. Chatbot-ul pe site + bot WhatsApp gestionează rezervările, meniurile și feedback-ul clienților nonstop.</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;">
+            <span style="background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.55);font-size:12px;padding:3px 10px;border-radius:6px;">Rezervări online</span>
+            <span style="background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.55);font-size:12px;padding:3px 10px;border-radius:6px;">Comenzi WhatsApp</span>
+            <span style="background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.55);font-size:12px;padding:3px 10px;border-radius:6px;">Feedback automat</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding-top:20px;border-top:1px solid rgba(255,255,255,0.08);">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="width:7px;height:7px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;"></div>
+              <span style="font-size:13px;color:rgba(255,255,255,0.45);">Activ din Apr 2024</span>
+            </div>
+            <a href="nexai.html#contact" style="font-size:13px;font-weight:600;color:#fcd34d;text-decoration:none;display:flex;align-items:center;gap:4px;transition:color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#fcd34d'">
+              Similar?
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 5: DentoSmile -->
+      <div onclick="window.location.href='dento-smile.html'" style="cursor:pointer;" class="project-card" data-category="vocal chatbot">
+        <div style="height:6px;background:linear-gradient(90deg,#0ea5e9,#38bdf8);"></div>
+        <div style="padding:32px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+            <div style="background:rgba(14,165,233,0.20);color:#38bdf8;font-size:12px;font-weight:600;padding:4px 12px;border-radius:999px;border:1px solid rgba(56,189,248,0.2);font-family:'DM Sans',sans-serif;letter-spacing:0.06em;text-transform:uppercase;">Vocal + Chatbot</div>
+            <div style="width:40px;height:40px;background:linear-gradient(135deg,#0ea5e9,#38bdf8);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:#fff;flex-shrink:0;">DS</div>
+          </div>
+          <div style="font-family:'Syne',sans-serif;font-size:3rem;font-weight:800;color:#38bdf8;letter-spacing:-0.04em;line-height:1;margin-bottom:8px;">95%</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:20px;">programări dentare complet automate</div>
+          <h3 style="font-size:18px;font-weight:700;color:#fff;margin-bottom:10px;letter-spacing:-0.01em;">DentoSmile Craiova</h3>
+          <p style="font-size:14px;color:rgba(255,255,255,0.60);line-height:1.65;margin-bottom:24px;">Clinică stomatologică cu 3 locații. Pachet complet vocal + chatbot: apeluri, programări, reamintiri automate și gestionarea anulărilor de urgență.</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;">
+            <span style="background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.55);font-size:12px;padding:3px 10px;border-radius:6px;">Reamintiri auto</span>
+            <span style="background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.55);font-size:12px;padding:3px 10px;border-radius:6px;">3 locații</span>
+            <span style="background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.55);font-size:12px;padding:3px 10px;border-radius:6px;">Anulări gestionate</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding-top:20px;border-top:1px solid rgba(255,255,255,0.08);">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="width:7px;height:7px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;"></div>
+              <span style="font-size:13px;color:rgba(255,255,255,0.45);">Activ din Mai 2024</span>
+            </div>
+            <a href="nexai.html#contact" style="font-size:13px;font-weight:600;color:#38bdf8;text-decoration:none;display:flex;align-items:center;gap:4px;transition:color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#38bdf8'">
+              Similar?
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 6: LogiTrans -->
+      <div onclick="window.location.href='logi-trans.html'" style="cursor:pointer;" class="project-card" data-category="whatsapp">
+        <div style="height:6px;background:linear-gradient(90deg,#f43f5e,#fb7185);"></div>
+        <div style="padding:32px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+            <div style="background:rgba(244,63,94,0.20);color:#fb7185;font-size:12px;font-weight:600;padding:4px 12px;border-radius:999px;border:1px solid rgba(251,113,133,0.2);font-family:'DM Sans',sans-serif;letter-spacing:0.06em;text-transform:uppercase;">WhatsApp Bot</div>
+            <div style="width:40px;height:40px;background:linear-gradient(135deg,#f43f5e,#fb7185);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:#fff;flex-shrink:0;">LT</div>
+          </div>
+          <div style="font-family:'Syne',sans-serif;font-size:3rem;font-weight:800;color:#fb7185;letter-spacing:-0.04em;line-height:1;margin-bottom:8px;">450</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:20px;">notificări de livrare trimise zilnic</div>
+          <h3 style="font-size:18px;font-weight:700;color:#fff;margin-bottom:10px;letter-spacing:-0.01em;">LogiTrans SRL</h3>
+          <p style="font-size:14px;color:rgba(255,255,255,0.60);line-height:1.65;margin-bottom:24px;">Firmă de transport și curierat. Bot-ul WhatsApp trimite automat statusul livrării, confirmă recepția și gestionează reclamațiile — zero efort uman pentru notificări.</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;">
+            <span style="background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.55);font-size:12px;padding:3px 10px;border-radius:6px;">Status livrare</span>
+            <span style="background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.55);font-size:12px;padding:3px 10px;border-radius:6px;">Confirmare recepție</span>
+            <span style="background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.55);font-size:12px;padding:3px 10px;border-radius:6px;">Reclamații auto</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding-top:20px;border-top:1px solid rgba(255,255,255,0.08);">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="width:7px;height:7px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;"></div>
+              <span style="font-size:13px;color:rgba(255,255,255,0.45);">Activ din Iun 2024</span>
+            </div>
+            <a href="nexai.html#contact" style="font-size:13px;font-weight:600;color:#fb7185;text-decoration:none;display:flex;align-items:center;gap:4px;transition:color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#fb7185'">
+              Similar?
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end grid -->
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ CTA -->
+<section style="padding:100px 24px;background:#13103a;position:relative;overflow:hidden;border-top:1px solid rgba(170,164,248,0.12);border-bottom:1px solid rgba(170,164,248,0.12);">
+  <div style="position:absolute;top:-150px;right:-150px;width:500px;height:500px;background:radial-gradient(circle,rgba(83,74,183,0.18) 0%,transparent 65%);pointer-events:none;"></div>
+  <div style="position:absolute;bottom:-150px;left:-150px;width:400px;height:400px;background:radial-gradient(circle,rgba(83,74,183,0.12) 0%,transparent 65%);pointer-events:none;"></div>
+  <div style="max-width:680px;margin:0 auto;text-align:center;position:relative;z-index:1;" class="reveal">
+    <div style="display:inline-block;background:rgba(255,255,255,0.10);color:rgba(255,255,255,0.8);font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;padding:5px 14px;border-radius:999px;margin-bottom:24px;font-family:'DM Sans',sans-serif;">Proiectul tău urmează?</div>
+    <h2 style="font-size:clamp(2rem,4.5vw,3rem);font-weight:800;letter-spacing:-0.03em;color:#fff;margin-bottom:20px;line-height:1.15;">Afacerea ta merită<br>aceleași rezultate</h2>
+    <p style="font-size:17px;color:rgba(255,255,255,0.70);line-height:1.7;margin-bottom:40px;">Fiecare proiect de mai sus a început cu o simplă discuție. Hai să vorbim despre afacerea ta — consultația e gratuită.</p>
+    <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
+      <a href="nexai.html#contact" class="btn-primary" style="padding:16px 32px;font-size:16px;">
+        Solicită consultație gratuită
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+      </a>
+      <a href="nexai.html" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.85);padding:15px 28px;border-radius:12px;font-family:'DM Sans',sans-serif;font-weight:600;font-size:15px;text-decoration:none;border:1.5px solid rgba(255,255,255,0.18);transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.14)'" onmouseout="this.style.background='rgba(255,255,255,0.08)'">
+        Înapoi la site
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ FOOTER -->
+<footer>
+  <div style="max-width:1200px;margin:0 auto;padding:64px 24px 32px;">
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;padding-bottom:48px;border-bottom:1px solid rgba(255,255,255,0.1);" id="footer-grid">
+      <div>
+        <a href="nexai.html" style="text-decoration:none;display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+          <div style="width:36px;height:36px;background:linear-gradient(135deg,#534AB7,#8a7ff3);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#fff" stroke="#fff" stroke-width="0.5" stroke-linejoin="round"/></svg>
+          </div>
+          <span style="font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:#fff;letter-spacing:-0.02em;">Nex<span style="color:#aaa4f8;">flow</span></span>
+        </a>
+        <p style="font-size:14px;color:rgba(255,255,255,0.55);line-height:1.7;margin-bottom:24px;max-width:260px;">Agenție de automatizare din Craiova, România. Automatizăm comunicarea pentru afaceri moderne.</p>
+      </div>
+      <div>
+        <h4 style="font-size:15px;font-weight:700;color:#fff;margin-bottom:20px;">Servicii</h4>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;">
+          <li><a href="nexai.html#servicii" style="font-size:14px;color:rgba(255,255,255,0.55);text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#aaa4f8'" onmouseout="this.style.color='rgba(255,255,255,0.55)'">Chatbot Site</a></li>
+          <li><a href="nexai.html#servicii" style="font-size:14px;color:rgba(255,255,255,0.55);text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#aaa4f8'" onmouseout="this.style.color='rgba(255,255,255,0.55)'">WhatsApp Bot</a></li>
+          <li><a href="nexai.html#servicii" style="font-size:14px;color:rgba(255,255,255,0.55);text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#aaa4f8'" onmouseout="this.style.color='rgba(255,255,255,0.55)'">Agent Vocal</a></li>
+          <li><a href="nexai.html#preturi" style="font-size:14px;color:rgba(255,255,255,0.55);text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#aaa4f8'" onmouseout="this.style.color='rgba(255,255,255,0.55)'">Prețuri</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 style="font-size:15px;font-weight:700;color:#fff;margin-bottom:20px;">Companie</h4>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;">
+          <li><a href="proiecte.html" style="font-size:14px;color:#aaa4f8;text-decoration:none;">Proiecte</a></li>
+          <li><a href="nexai.html#testimoniale" style="font-size:14px;color:rgba(255,255,255,0.55);text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#aaa4f8'" onmouseout="this.style.color='rgba(255,255,255,0.55)'">Testimoniale</a></li>
+          <li><a href="nexai.html#contact" style="font-size:14px;color:rgba(255,255,255,0.55);text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#aaa4f8'" onmouseout="this.style.color='rgba(255,255,255,0.55)'">Contact</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 style="font-size:15px;font-weight:700;color:#fff;margin-bottom:20px;">Contact</h4>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;">
+          <li style="font-size:14px;color:rgba(255,255,255,0.55);">Craiova, România</li>
+          <li><a href="mailto:contact@nexflow.ro" style="font-size:14px;color:rgba(255,255,255,0.55);text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#aaa4f8'" onmouseout="this.style.color='rgba(255,255,255,0.55)'">contact@nexflow.ro</a></li>
+          <li><a href="tel:+40700000000" style="font-size:14px;color:rgba(255,255,255,0.55);text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#aaa4f8'" onmouseout="this.style.color='rgba(255,255,255,0.55)'">+40 700 000 000</a></li>
+        </ul>
+      </div>
+    </div>
+    <div style="padding-top:28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+      <p style="font-size:13px;color:rgba(255,255,255,0.35);">© 2025 Nexflow. Toate drepturile rezervate.</p>
+      <div style="display:flex;gap:24px;">
+        <a href="#" style="font-size:13px;color:rgba(255,255,255,0.35);text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='rgba(255,255,255,0.7)'" onmouseout="this.style.color='rgba(255,255,255,0.35)'">Politică de confidențialitate</a>
+        <a href="#" style="font-size:13px;color:rgba(255,255,255,0.35);text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='rgba(255,255,255,0.7)'" onmouseout="this.style.color='rgba(255,255,255,0.35)'">Termeni și condiții</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ═══ WebGL Hero Background ═══
+(function() {
+  const canvas = document.getElementById('hero-canvas');
+  if (!canvas) return;
+  const gl = canvas.getContext('webgl');
+  if (!gl) { canvas.style.display='none'; return; }
+
+  const vertSrc = `attribute vec2 aPos; void main(){gl_Position=vec4(aPos,0.,1.);}`;
+  const fragSrc = `
+    precision highp float;
+    uniform float iTime; uniform vec2 iRes;
+    mat2 rot(float a){float c=cos(a),s=sin(a);return mat2(c,-s,s,c);}
+    float vary(vec2 v1,vec2 v2,float s,float sp){return sin(dot(normalize(v1),normalize(v2))*s+iTime*sp)/100.;}
+    vec3 ring(vec2 uv,vec2 c,float r,float w){
+      vec2 d=c-uv;float l=length(d);
+      l+=vary(d,vec2(0.,1.),5.,2.);
+      l-=vary(d,vec2(1.,0.),5.,2.);
+      return vec3(smoothstep(r-w,r,l)-smoothstep(r,r+w,l));
+    }
+    void main(){
+      vec2 uv=gl_FragCoord.xy/iRes.xy;
+      uv.x*=iRes.x/iRes.y; uv.x-=(iRes.x/iRes.y-1.0)*0.5;
+      float mask=0.; vec2 center=vec2(.5);
+      mask+=ring(uv,center,.35,.035).r;
+      mask+=ring(uv,center,.332,.010).r;
+      mask+=ring(uv,center,.368,.005).r;
+      vec2 v=rot(iTime)*uv;
+      vec3 fg=vec3(v.x*0.4+0.3,v.y*0.2+0.15,0.85-v.y*v.x*0.5);
+      vec3 bg=vec3(0.055,0.043,0.118);
+      vec3 col=mix(bg,fg,mask);
+      col=mix(col,vec3(1.),ring(uv,center,.35,.003).r);
+      gl_FragColor=vec4(col,1.);
+    }`;
+
+  function mkShader(t,s){const sh=gl.createShader(t);gl.shaderSource(sh,s);gl.compileShader(sh);return sh;}
+  const prog=gl.createProgram();
+  gl.attachShader(prog,mkShader(gl.VERTEX_SHADER,vertSrc));
+  gl.attachShader(prog,mkShader(gl.FRAGMENT_SHADER,fragSrc));
+  gl.linkProgram(prog); gl.useProgram(prog);
+  const buf=gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);
+  const aPos=gl.getAttribLocation(prog,'aPos');
+  gl.enableVertexAttribArray(aPos); gl.vertexAttribPointer(aPos,2,gl.FLOAT,false,0,0);
+  const tLoc=gl.getUniformLocation(prog,'iTime');
+  const rLoc=gl.getUniformLocation(prog,'iRes');
+
+  function resize(){
+    canvas.width=window.innerWidth;
+    canvas.height=window.innerHeight;
+    gl.viewport(0,0,canvas.width,canvas.height);
+  }
+  resize(); window.addEventListener('resize',resize);
+
+  function render(t){ gl.uniform1f(tLoc,t*0.001); gl.uniform2f(rLoc,canvas.width,canvas.height); gl.drawArrays(gl.TRIANGLES,0,6); requestAnimationFrame(render); }
+  requestAnimationFrame(render);
+})();
+
+// DEBUG: count cards
+const allPC = document.querySelectorAll('.project-card');
+const gridPC = document.querySelectorAll('#projects-grid .project-card');
+const grids = document.querySelectorAll('#projects-grid');
+document.title = 'All:' + allPC.length + ' Grid:' + gridPC.length + ' Grids:' + grids.length;
+
+// ═══ Navbar scroll ═══
+const navbar = document.getElementById('navbar');
+window.addEventListener('scroll', () => {
+  navbar.classList.toggle('scrolled', window.scrollY > 40);
+});
+
+// ═══ Mobile menu ═══
+function toggleMenu() {
+  document.getElementById('mobile-menu').classList.toggle('open');
+}
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('mobile-menu');
+  const hamburger = document.getElementById('hamburger');
+  if (menu.classList.contains('open') && !menu.contains(e.target) && !hamburger.contains(e.target)) {
+    menu.classList.remove('open');
+  }
+});
+
+// ═══ Reveal animations ═══
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+}, { threshold: 0.10, rootMargin: '0px 0px -30px 0px' });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// ═══ Filter ═══
+function filterProjects(btn, filter) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('#projects-grid .project-card').forEach(card => {
+    const cat = card.getAttribute('data-category') || '';
+    card.style.display = (filter === 'all' || cat.includes(filter)) ? '' : 'none';
+  });
+}
+</script>
+</body>
+</html>
