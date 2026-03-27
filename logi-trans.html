@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Logi Trans — Nexflow</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'DM Sans', sans-serif; background: #0e0b1e; color: #fff; }
+  h1, h2, h3, h4 { font-family: 'Syne', sans-serif; }
+
+  #navbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    transition: background 0.3s, box-shadow 0.3s;
+    padding: 20px 0;
+  }
+  #navbar.scrolled {
+    background: rgba(14,11,30,0.92);
+    backdrop-filter: blur(16px);
+    box-shadow: 0 1px 24px rgba(0,0,0,0.30);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    padding: 12px 0;
+  }
+
+  #mobile-menu {
+    display: none; flex-direction: column;
+    background: rgba(14,11,30,0.96); backdrop-filter: blur(16px);
+    border-top: 1px solid rgba(255,255,255,0.08); padding: 16px 0;
+  }
+  #mobile-menu.open { display: flex; }
+  #mobile-menu a { padding: 12px 24px; color: rgba(255,255,255,0.75); font-weight: 500; text-decoration: none; }
+  #mobile-menu a:hover { color: #fda4af; }
+
+  .reveal {
+    opacity: 0; transform: translateY(24px);
+    transition: opacity 0.65s cubic-bezier(.22,1,.36,1), transform 0.65s cubic-bezier(.22,1,.36,1);
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+  .reveal-delay-1 { transition-delay: 0.10s; }
+  .reveal-delay-2 { transition-delay: 0.20s; }
+  .reveal-delay-3 { transition-delay: 0.30s; }
+
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #e11d48; color: #fff;
+    padding: 14px 28px; border-radius: 12px;
+    font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 15px;
+    border: none; cursor: pointer; text-decoration: none;
+    box-shadow: 0 4px 24px rgba(225,29,72,0.30);
+    transition: background 0.2s, transform 0.2s cubic-bezier(.22,1,.36,1);
+  }
+  .btn-primary:hover { background: #be123c; transform: translateY(-2px); }
+
+  .step-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 16px;
+    padding: 28px;
+    position: relative;
+  }
+
+  .result-card {
+    background: rgba(225,29,72,0.12);
+    border: 1px solid rgba(253,164,175,0.18);
+    border-radius: 16px;
+    padding: 28px 24px;
+    text-align: center;
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
+    50% { box-shadow: 0 0 0 6px rgba(34,197,94,0); }
+  }
+
+  @media (max-width: 768px) {
+    #desktop-nav { display: none !important; }
+    #hamburger { display: block !important; }
+    #steps-grid { grid-template-columns: 1fr !important; }
+    #results-grid { grid-template-columns: 1fr 1fr !important; }
+    #problem-grid { grid-template-columns: 1fr !important; }
+    #solution-grid { grid-template-columns: 1fr !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav id="navbar">
+  <div style="max-width:1200px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;">
+    <a href="nexai.html" style="text-decoration:none;display:flex;align-items:center;gap:10px;">
+      <div style="width:36px;height:36px;background:linear-gradient(135deg,#534AB7,#8a7ff3);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#fff" stroke="#fff" stroke-width="0.5" stroke-linejoin="round"/></svg>
+      </div>
+      <span style="font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:#fff;letter-spacing:-0.02em;">Nex<span style="color:#aaa4f8;">flow</span></span>
+    </a>
+    <div style="display:flex;align-items:center;gap:32px;" id="desktop-nav">
+      <a href="nexai.html#servicii" style="font-weight:500;color:rgba(255,255,255,0.75);text-decoration:none;font-size:15px;transition:color 0.2s;" onmouseover="this.style.color='#aaa4f8'" onmouseout="this.style.color='rgba(255,255,255,0.75)'">Servicii</a>
+      <a href="nexai.html#preturi" style="font-weight:500;color:rgba(255,255,255,0.75);text-decoration:none;font-size:15px;transition:color 0.2s;" onmouseover="this.style.color='#aaa4f8'" onmouseout="this.style.color='rgba(255,255,255,0.75)'">Prețuri</a>
+      <a href="proiecte.html" style="font-weight:500;color:#aaa4f8;text-decoration:none;font-size:15px;">Proiecte</a>
+      <a href="nexai.html#contact" style="font-weight:500;color:rgba(255,255,255,0.75);text-decoration:none;font-size:15px;transition:color 0.2s;" onmouseover="this.style.color='#aaa4f8'" onmouseout="this.style.color='rgba(255,255,255,0.75)'">Contact</a>
+      <a href="nexai.html#contact" class="btn-primary" style="padding:10px 22px;font-size:14px;">Solicită ofertă</a>
+    </div>
+    <button id="hamburger" onclick="toggleMenu()" style="display:none;background:none;border:none;cursor:pointer;padding:8px;">
+      <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+  </div>
+  <div id="mobile-menu">
+    <a href="nexai.html#servicii" onclick="toggleMenu()">Servicii</a>
+    <a href="nexai.html#preturi" onclick="toggleMenu()">Prețuri</a>
+    <a href="proiecte.html" onclick="toggleMenu()">Proiecte</a>
+    <a href="nexai.html#contact" onclick="toggleMenu()">Contact</a>
+  </div>
+</nav>
+
+<!-- HEADER -->
+<section style="padding:120px 24px 64px;background:#0e0b1e;border-bottom:1px solid rgba(255,255,255,0.07);">
+  <div style="max-width:860px;margin:0 auto;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:28px;font-size:14px;color:rgba(255,255,255,0.40);">
+      <a href="proiecte.html" style="color:rgba(255,255,255,0.40);text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#fda4af'" onmouseout="this.style.color='rgba(255,255,255,0.40)'">Proiecte</a>
+      <span>/</span>
+      <span style="color:rgba(255,255,255,0.70);">Logi Trans</span>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+      <div style="background:rgba(225,29,72,0.20);color:#fda4af;font-size:12px;font-weight:600;padding:4px 14px;border-radius:999px;border:1px solid rgba(253,164,175,0.25);letter-spacing:0.06em;text-transform:uppercase;">WhatsApp Bot</div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <div style="width:7px;height:7px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite;"></div>
+        <span style="font-size:13px;color:rgba(255,255,255,0.45);">Activ din Februarie 2024</span>
+      </div>
+    </div>
+
+    <h1 style="font-size:clamp(2rem,4.5vw,3.2rem);font-weight:800;letter-spacing:-0.03em;line-height:1.1;margin-bottom:20px;">
+      Logi Trans
+    </h1>
+    <p style="font-size:18px;color:rgba(255,255,255,0.65);line-height:1.7;max-width:640px;">
+      Companie de transport marfă din Craiova cu zeci de șoferi și clienți B2B. Botul WhatsApp Nexflow gestionează automat cererile de transport, actualizările de status și comunicarea cu clienții — fără back-and-forth telefonic.
+    </p>
+  </div>
+</section>
+
+<!-- REZULTATE RAPIDE -->
+<section style="padding:56px 24px;background:#090717;">
+  <div style="max-width:860px;margin:0 auto;">
+    <div id="results-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px;">
+      <div class="result-card reveal">
+        <div style="font-family:'Syne',sans-serif;font-size:2.4rem;font-weight:800;color:#fda4af;letter-spacing:-0.04em;line-height:1;">-75%</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.55);margin-top:8px;line-height:1.4;">Apeluri telefonice zilnice eliminate</div>
+      </div>
+      <div class="result-card reveal reveal-delay-1">
+        <div style="font-family:'Syne',sans-serif;font-size:2.4rem;font-weight:800;color:#fda4af;letter-spacing:-0.04em;line-height:1;">24/7</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.55);margin-top:8px;line-height:1.4;">Actualizări status transport automate</div>
+      </div>
+      <div class="result-card reveal reveal-delay-2">
+        <div style="font-family:'Syne',sans-serif;font-size:2.4rem;font-weight:800;color:#fda4af;letter-spacing:-0.04em;line-height:1;">4 zile</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.55);margin-top:8px;line-height:1.4;">De la brief la bot complet funcțional</div>
+      </div>
+      <div class="result-card reveal reveal-delay-3">
+        <div style="font-family:'Syne',sans-serif;font-size:2.4rem;font-weight:800;color:#fda4af;letter-spacing:-0.04em;line-height:1;">+30%</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.55);margin-top:8px;line-height:1.4;">Capacitate gestionată cu același personal</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROBLEMA -->
+<section style="padding:80px 24px;background:#0e0b1e;">
+  <div style="max-width:860px;margin:0 auto;">
+    <div class="reveal" style="display:inline-block;background:rgba(239,68,68,0.15);color:#fca5a5;font-size:12px;font-weight:600;padding:4px 14px;border-radius:999px;border:1px solid rgba(239,68,68,0.25);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:20px;">Problema</div>
+    <h2 class="reveal" style="font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;letter-spacing:-0.02em;margin-bottom:32px;line-height:1.2;">Cum era înainte de Nexflow</h2>
+
+    <div id="problem-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="reveal" style="background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.15);border-radius:14px;padding:24px;">
+        <div style="display:flex;align-items:flex-start;gap:14px;">
+          <div style="width:36px;height:36px;background:rgba(239,68,68,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </div>
+          <div>
+            <div style="font-weight:700;font-size:15px;color:#fff;margin-bottom:6px;">Zeci de apeluri zilnice de la clienți</div>
+            <div style="font-size:14px;color:rgba(255,255,255,0.55);line-height:1.6;">Clienții sunau constant să întrebe "unde e marfa mea?", "când ajunge?", "a plecat camionul?". Dispecerul pierdea ore întregi cu aceste apeluri.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="reveal reveal-delay-1" style="background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.15);border-radius:14px;padding:24px;">
+        <div style="display:flex;align-items:flex-start;gap:14px;">
+          <div style="width:36px;height:36px;background:rgba(239,68,68,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </div>
+          <div>
+            <div style="font-weight:700;font-size:15px;color:#fff;margin-bottom:6px;">Cereri de ofertă pierdute în WhatsApp</div>
+            <div style="font-size:14px;color:rgba(255,255,255,0.55);line-height:1.6;">Potențiali clienți trimiteau mesaje, nu primeau răspuns în timp util și mergeau la concurență. Conversiile din WhatsApp erau sub 20%.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="reveal reveal-delay-1" style="background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.15);border-radius:14px;padding:24px;">
+        <div style="display:flex;align-items:flex-start;gap:14px;">
+          <div style="width:36px;height:36px;background:rgba(239,68,68,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </div>
+          <div>
+            <div style="font-weight:700;font-size:15px;color:#fff;margin-bottom:6px;">Comunicare haotică cu șoferii</div>
+            <div style="font-size:14px;color:rgba(255,255,255,0.55);line-height:1.6;">Instrucțiunile se dădeau verbal sau prin SMS nestructurate. Documentele de transport se trimiteau manual, cu întârzieri și erori.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="reveal reveal-delay-2" style="background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.15);border-radius:14px;padding:24px;">
+        <div style="display:flex;align-items:flex-start;gap:14px;">
+          <div style="width:36px;height:36px;background:rgba(239,68,68,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </div>
+          <div>
+            <div style="font-weight:700;font-size:15px;color:#fff;margin-bottom:6px;">Facturare întârziată și erori</div>
+            <div style="font-size:14px;color:rgba(255,255,255,0.55);line-height:1.6;">Datele de transport se colectau manual după livrare. Facturile se trimiteau cu zile întârziere, uneori cu informații greșite.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SOLUTIA -->
+<section style="padding:80px 24px;background:#090717;">
+  <div style="max-width:860px;margin:0 auto;">
+    <div class="reveal" style="display:inline-block;background:rgba(225,29,72,0.20);color:#fda4af;font-size:12px;font-weight:600;padding:4px 14px;border-radius:999px;border:1px solid rgba(253,164,175,0.25);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:20px;">Soluția</div>
+    <h2 class="reveal" style="font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;letter-spacing:-0.02em;margin-bottom:16px;line-height:1.2;">Ce am construit pentru Logi Trans</h2>
+    <p class="reveal" style="font-size:16px;color:rgba(255,255,255,0.60);line-height:1.7;margin-bottom:40px;max-width:620px;">Un bot WhatsApp care gestionează simultan comunicarea cu clienții și cu șoferii — actualizări de status automate, cereri de ofertă procesate instant și documente trimise fără intervenție umană.</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;" id="solution-grid">
+      <div class="reveal" style="background:rgba(225,29,72,0.10);border:1px solid rgba(253,164,175,0.18);border-radius:14px;padding:24px;display:flex;align-items:flex-start;gap:14px;">
+        <div style="width:40px;height:40px;background:rgba(225,29,72,0.25);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fda4af" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div>
+          <div style="font-weight:700;font-size:15px;color:#fff;margin-bottom:6px;">Status transport în timp real</div>
+          <div style="font-size:14px;color:rgba(255,255,255,0.55);line-height:1.6;">Clientul scrie "unde e marfa?" și primește imediat statusul curent: localitate, ETA estimat și numele șoferului — fără să sune pe nimeni.</div>
+        </div>
+      </div>
+
+      <div class="reveal reveal-delay-1" style="background:rgba(225,29,72,0.10);border:1px solid rgba(253,164,175,0.18);border-radius:14px;padding:24px;display:flex;align-items:flex-start;gap:14px;">
+        <div style="width:40px;height:40px;background:rgba(225,29,72,0.25);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fda4af" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div>
+          <div style="font-weight:700;font-size:15px;color:#fff;margin-bottom:6px;">Cereri de ofertă procesate instant</div>
+          <div style="font-size:14px;color:rgba(255,255,255,0.55);line-height:1.6;">Noul client trimite ruta și tonajul pe WhatsApp. Botul colectează datele, calculează disponibilitatea și trimite oferta preliminară în minute.</div>
+        </div>
+      </div>
+
+      <div class="reveal reveal-delay-1" style="background:rgba(225,29,72,0.10);border:1px solid rgba(253,164,175,0.18);border-radius:14px;padding:24px;display:flex;align-items:flex-start;gap:14px;">
+        <div style="width:40px;height:40px;background:rgba(225,29,72,0.25);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fda4af" stroke-width="2" stroke-linecap="round"><rect x="1" y="3" width="15" height="13" rx="2"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        </div>
+        <div>
+          <div style="font-weight:700;font-size:15px;color:#fff;margin-bottom:6px;">Comunicare automată cu șoferii</div>
+          <div style="font-size:14px;color:rgba(255,255,255,0.55);line-height:1.6;">Adresa de ridicare, documentele și instrucțiunile speciale se trimit automat pe WhatsApp la șofer — imediat ce comanda e confirmată.</div>
+        </div>
+      </div>
+
+      <div class="reveal reveal-delay-2" style="background:rgba(225,29,72,0.10);border:1px solid rgba(253,164,175,0.18);border-radius:14px;padding:24px;display:flex;align-items:flex-start;gap:14px;">
+        <div style="width:40px;height:40px;background:rgba(225,29,72,0.25);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fda4af" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        </div>
+        <div>
+          <div style="font-weight:700;font-size:15px;color:#fff;margin-bottom:6px;">Confirmare livrare și date facturare</div>
+          <div style="font-size:14px;color:rgba(255,255,255,0.55);line-height:1.6;">La livrare, șoferul trimite foto confirmare pe WhatsApp. Botul notifică clientul instant și transmite datele spre facturare automată.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CUM FUNCTIONEAZA -->
+<section style="padding:80px 24px;background:#0e0b1e;">
+  <div style="max-width:860px;margin:0 auto;">
+    <div class="reveal" style="display:inline-block;background:rgba(225,29,72,0.20);color:#fda4af;font-size:12px;font-weight:600;padding:4px 14px;border-radius:999px;border:1px solid rgba(253,164,175,0.25);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:20px;">Cum funcționează</div>
+    <h2 class="reveal" style="font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;letter-spacing:-0.02em;margin-bottom:40px;line-height:1.2;">Flow-ul automatizării, pas cu pas</h2>
+
+    <div id="steps-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;">
+
+      <div class="step-card reveal">
+        <div style="width:40px;height:40px;background:linear-gradient(135deg,#e11d48,#fb7185);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
+          <span style="font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:#fff;">1</span>
+        </div>
+        <h3 style="font-size:16px;font-weight:700;color:#fff;margin-bottom:10px;">Clientul trimite cererea pe WhatsApp</h3>
+        <p style="font-size:14px;color:rgba(255,255,255,0.55);line-height:1.6;">Botul răspunde instant, cere detaliile necesare (rută, tonaj, dată) și înregistrează cererea în sistemul de comenzi — fără intervenție umană.</p>
+      </div>
+
+      <div class="step-card reveal reveal-delay-1">
+        <div style="width:40px;height:40px;background:linear-gradient(135deg,#e11d48,#fb7185);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
+          <span style="font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:#fff;">2</span>
+        </div>
+        <h3 style="font-size:16px;font-weight:700;color:#fff;margin-bottom:10px;">Verifică disponibilitatea flotei</h3>
+        <p style="font-size:14px;color:rgba(255,255,255,0.55);line-height:1.6;">Sistemul verifică în timp real vehiculele disponibile, rutele active și capacitățile libere — și propune soluția optimă dispecerului spre aprobare.</p>
+      </div>
+
+      <div class="step-card reveal reveal-delay-2">
+        <div style="width:40px;height:40px;background:linear-gradient(135deg,#e11d48,#fb7185);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
+          <span style="font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:#fff;">3</span>
+        </div>
+        <h3 style="font-size:16px;font-weight:700;color:#fff;margin-bottom:10px;">Confirmarea comenzii și alocarea</h3>
+        <p style="font-size:14px;color:rgba(255,255,255,0.55);line-height:1.6;">La un singur click de la dispecer, comanda e confirmată, clientul notificat automat și șoferul alocat primește toate detaliile pe WhatsApp.</p>
+      </div>
+
+      <div class="step-card reveal">
+        <div style="width:40px;height:40px;background:linear-gradient(135deg,#e11d48,#fb7185);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
+          <span style="font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:#fff;">4</span>
+        </div>
+        <h3 style="font-size:16px;font-weight:700;color:#fff;margin-bottom:10px;">Updates automate pe parcurs</h3>
+        <p style="font-size:14px;color:rgba(255,255,255,0.55);line-height:1.6;">Clientul primește notificări automate la ridicarea mărfii, la intrarea în țară de destinație și cu ETA actualizat — fără să mai sune.</p>
+      </div>
+
+      <div class="step-card reveal reveal-delay-1">
+        <div style="width:40px;height:40px;background:linear-gradient(135deg,#e11d48,#fb7185);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
+          <span style="font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:#fff;">5</span>
+        </div>
+        <h3 style="font-size:16px;font-weight:700;color:#fff;margin-bottom:10px;">Confirmare livrare cu dovadă foto</h3>
+        <p style="font-size:14px;color:rgba(255,255,255,0.55);line-height:1.6;">Șoferul trimite fotografia de confirmare pe WhatsApp. Botul o salvează automat, notifică clientul și inițiază procesul de facturare.</p>
+      </div>
+
+      <div class="step-card reveal reveal-delay-2">
+        <div style="width:40px;height:40px;background:linear-gradient(135deg,#e11d48,#fb7185);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
+          <span style="font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:#fff;">6</span>
+        </div>
+        <h3 style="font-size:16px;font-weight:700;color:#fff;margin-bottom:10px;">Facturare și arhivare automată</h3>
+        <p style="font-size:14px;color:rgba(255,255,255,0.55);line-height:1.6;">Datele transportului sunt trimise automat spre departamentul de facturare. Toate documentele sunt arhivate digital, accesibile instant la orice audit.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section style="padding:80px 24px 100px;background:#090717;">
+  <div style="max-width:680px;margin:0 auto;text-align:center;" class="reveal">
+    <h2 style="font-size:clamp(1.8rem,3.5vw,2.4rem);font-weight:800;letter-spacing:-0.03em;margin-bottom:16px;line-height:1.2;">Vrei același rezultat<br>pentru afacerea ta?</h2>
+    <p style="font-size:16px;color:rgba(255,255,255,0.60);line-height:1.7;margin-bottom:36px;">Consultația e gratuită. În 30 de minute îți arătăm exact ce poate fi automatizat la tine.</p>
+    <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
+      <a href="nexai.html#contact" style="display:inline-flex;align-items:center;gap:8px;background:#e11d48;color:#fff;padding:16px 32px;border-radius:12px;font-family:'DM Sans',sans-serif;font-weight:600;font-size:16px;text-decoration:none;box-shadow:0 4px 24px rgba(225,29,72,0.30);transition:background 0.2s,transform 0.2s cubic-bezier(.22,1,.36,1);" onmouseover="this.style.background='#be123c';this.style.transform='translateY(-2px)'" onmouseout="this.style.background='#e11d48';this.style.transform='translateY(0)'">
+        Solicită consultație gratuită
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+      </a>
+      <a href="proiecte.html" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.85);padding:15px 28px;border-radius:12px;font-family:'DM Sans',sans-serif;font-weight:600;font-size:15px;text-decoration:none;border:1.5px solid rgba(255,255,255,0.15);transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.12)'" onmouseout="this.style.background='rgba(255,255,255,0.07)'">
+        ← Înapoi la proiecte
+      </a>
+    </div>
+  </div>
+</section>
+
+<script>
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 40));
+
+  function toggleMenu() { document.getElementById('mobile-menu').classList.toggle('open'); }
+  document.addEventListener('click', (e) => {
+    const menu = document.getElementById('mobile-menu');
+    const hamburger = document.getElementById('hamburger');
+    if (menu.classList.contains('open') && !menu.contains(e.target) && !hamburger.contains(e.target)) menu.classList.remove('open');
+  });
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+  }, { threshold: 0.10 });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
