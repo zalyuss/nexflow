@@ -537,12 +537,6 @@
   requestAnimationFrame(render);
 })();
 
-// DEBUG: count cards
-const allPC = document.querySelectorAll('.project-card');
-const gridPC = document.querySelectorAll('#projects-grid .project-card');
-const grids = document.querySelectorAll('#projects-grid');
-document.title = 'All:' + allPC.length + ' Grid:' + gridPC.length + ' Grids:' + grids.length;
-
 // ═══ Navbar scroll ═══
 const navbar = document.getElementById('navbar');
 window.addEventListener('scroll', () => {
